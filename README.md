@@ -153,5 +153,6 @@ def lambda_handler(event, context):
 ```
 ## Athena
 Utilizado para armazenar a tabela relacional com os dados de treino do modelo.
+![athena](https://github.com/user-attachments/assets/cc3f793c-3cfb-463e-81af-e793012a88e5)
 
 
