@@ -9,10 +9,10 @@
 Utilizamos o kaggle como fonte de dados das imagens de instrumentos
 
 ## EventBridge (CloudWatch Events)
-Usamos o event bridge para acionar a função lambda diáriamente.
+Usamos o event bridge para acionar a função lambda diariamente.
 
 ## Lambda - fiap_tc_3_getdata
-A primeira função lambda tem como objetivo coletar diáriamente os dados da fonte na sua forma bruta, tratar os dados, retornar um arquivo JSON com 2 chaves, instrumento e imagem (imagem salva em base64), por fim armazena no bucket S3 pela data de extração.
+A primeira função lambda tem como objetivo coletar diariamente os dados da fonte na sua forma bruta, tratar os dados, retornar um arquivo JSON com 2 chaves, instrumento e imagem (imagem salva em base64), por fim armazena no bucket S3 pela data de extração.
 
 ```python
 import os
@@ -71,7 +71,7 @@ def lambda_handler(event, context):
 ```
 
 ## Lambda - fiap_tc_3_create_table
-Esta função é acionada sempre que um arquivo novo é adicionado no bucket S3. Após o termino do ETL o lambda extrai os arquivos JSON e incrementa na databesa no Athena.
+Esta função é acionada sempre que um arquivo novo é adicionado no bucket S3. Após o término do ETL o lambda extrai os arquivos JSON e incrementa na database no Athena.
 
 ```python
 import boto3
@@ -152,7 +152,32 @@ def lambda_handler(event, context):
 
 ```
 ## Athena
-Utilizado para armazenar a tabela relacional com os dados de treino do modelo.
+Utilizado para armazenar a tabela relacional com os dados ao qual o são usados para treinar o modelo.
 ![athena](https://github.com/user-attachments/assets/cc3f793c-3cfb-463e-81af-e793012a88e5)
 
 
+## Estrutura de treinamento
+- Uso do TensorFlow para criar datasets de treino e teste.​
+- Separação automática (80% treino, 20% teste).​
+- Imagens redimensionadas para 224x224.
+
+## Construção do Modelo​
+A arquitetura do nosso modelo utiliza a EfficientNetB3 como base, já pré-treinada, para extrair características das imagens. Aplicamos data augmentation para enriquecer o treino. Em seguida, adicionamos camadas densas para adaptar a saída para a classificação dos 10 instrumentos musicais do nosso conjunto de dados. Por fim, usamos uma camada softmax para prever qual instrumento aparece na imagem enviada.​
+
+![image](https://github.com/user-attachments/assets/7c7d81ee-cae7-488e-a464-47ea5e0e4b61)
+
+
+## Treinamento do modelo​
+Na etapa de treinamento, compilamos o modelo com o otimizador Adam e a função de perda categórica. Usamos três mecanismos de parada inteligente: EarlyStopping, que para o treino se a validação não melhorar, ReduceLROnPlateau, que diminui a taxa de aprendizado se necessário, e um callback personalizado que interrompe tudo ao atingir a acurácia de validação desejada. Assim, garantimos um modelo eficiente e com bom desempenho, sem treinar mais do que o necessário.​
+
+![image](https://github.com/user-attachments/assets/31ada075-74d7-471a-ad91-c3271ab95629)
+
+## Aplicação do Modelo​
+• O modelo pode ser integrado em apps e sistemas.​
+• Exemplo de uso: upload de uma nova imagem e classificação automática através do streamlit.​
+
+![image](https://github.com/user-attachments/assets/ea84dd43-9820-4ee7-b858-551500b83d8e)
+
+​
+## Streamlit 
+A solução adotada para a aplicação do modelo foi um frontend implementado com o  framework de interface  streamlit e o backend utilizando FastAPI com a função de recuperar o modelo treinado no bucket e  devolver a resposta baseado nos parâmetros recebidos na requisição do frontend.
